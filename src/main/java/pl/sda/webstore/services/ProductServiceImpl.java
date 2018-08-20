@@ -5,9 +5,12 @@ import org.springframework.stereotype.Service;
 import pl.sda.webstore.domains.Product;
 import pl.sda.webstore.repositories.ProductRepository;
 
+import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService{
@@ -41,5 +44,23 @@ public class ProductServiceImpl implements ProductService{
     @Override
     public List<Product> getProductByCategory(String category) {
         return productRepository.getProductsByCategory(category);
+    }
+
+    @Override
+    public Set<Product> getProductsByPriceFilter(Map<String, List<String>> priceFilterParams) {
+        return productRepository.getProductsByPriceFilter(priceFilterParams);
+    }
+
+    public Set<Product> getProductsByPriceManufacturerAndCategory(
+            Map<String, List<String>> priceParams, String manufacturer, String category){
+        Set<Product> productsByPrice = this.getProductsByPriceFilter(priceParams);
+        productsByPrice.retainAll(new HashSet<>(getProductByManufacturer(manufacturer)));
+        productsByPrice.retainAll(new HashSet<>(getProductByCategory(category)));
+        return productsByPrice;
+    }
+
+    @Override
+    public void addProduct(Product product) {
+        productRepository.addProduct(product);
     }
 }

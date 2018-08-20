@@ -58,12 +58,11 @@ public class InMemoryProductRepository implements ProductRepository {
     }
 
     @Override
-    public List<Product> getProductsByManufacturer(String manufacturer){
+    public List<Product> getProductsByManufacturer(String manufacturer) {
         return listOfProducts.stream()
                 .filter(x -> manufacturer.equalsIgnoreCase(x.getManufacturer()))
                 .collect(Collectors.toList());
     }
-
 
 
     @Override
@@ -72,16 +71,16 @@ public class InMemoryProductRepository implements ProductRepository {
         Set<Product> productsByCategory = new HashSet<>();
 
         for (String filterParam : filterParams.keySet()) {
-            if (filterParam.contains("brand")){
+            if (filterParam.contains("brand")) {
                 for (String brandName : filterParams.get("brand")) {
-                    for(Product product : this.getProductsByManufacturer(brandName)){
+                    for (Product product : this.getProductsByManufacturer(brandName)) {
                         productsByBrand.add(product);
                     }
                 }
             }
-            if (filterParam.contains("category")){
+            if (filterParam.contains("category")) {
                 for (String categoryName : filterParams.get("category")) {
-                    for(Product product : this.getProductsByCategory(categoryName)){
+                    for (Product product : this.getProductsByCategory(categoryName)) {
                         productsByCategory.add(product);
                     }
                 }
@@ -91,4 +90,39 @@ public class InMemoryProductRepository implements ProductRepository {
         return productsByCategory;
     }
 
+    @Override
+    public Set<Product> getProductsByPriceFilter(Map<String, List<String>> priceFilterParams) {
+        Set<Product> productsByLowPrice = new HashSet<>();
+        Set<Product> productsByHighPrice = new HashSet<>();
+
+        for (String priceFilterParam : priceFilterParams.keySet()) {
+            if (priceFilterParam.contains("low")) {
+                for (Product product : this.getAllProducts()) {
+                    if (product.getUnitPrice().compareTo((new BigDecimal(priceFilterParams.get("low").get(0)))) >= 0) {
+                        productsByLowPrice.add(product);
+                    }
+                }
+            }
+            if (priceFilterParam.contains("high")) {
+                for (Product product : this.getAllProducts()) {
+                    if (product.getUnitPrice().compareTo((new BigDecimal(priceFilterParams.get("high").get(0)))) <= 0) {
+                        productsByHighPrice.add(product);
+                    }
+                }
+            }
+        }
+        if (productsByLowPrice.isEmpty() && priceFilterParams.get("low") == null) {
+            return productsByHighPrice;
+        } else if (productsByHighPrice.isEmpty() && priceFilterParams.get("high") == null) {
+            return productsByLowPrice;
+        } else {
+            productsByHighPrice.retainAll(productsByLowPrice);
+            return productsByHighPrice;
+        }
+    }
+
+    @Override
+    public void addProduct(Product product) {
+        listOfProducts.add(product);
+    }
 }
